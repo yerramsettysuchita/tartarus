@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+.tartarus-workspace/
+
+# tunnel url written by npm run tunnel
+.tunnel-url

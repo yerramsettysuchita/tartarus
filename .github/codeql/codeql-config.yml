@@ -1,0 +1,11 @@
+name: Tartarus CodeQL config
+
+# Scope static analysis to our own application source. The examples directory
+# holds Tartarus-Patient-Zero, an intentionally vulnerable target that exists
+# only to be scanned and exploited by the agent, so it must not be treated as
+# our production code. Build artifacts are excluded too.
+paths-ignore:
+  - examples/**
+  - ui/dist/**
+  - dist/**
+  - '**/*.test.ts'

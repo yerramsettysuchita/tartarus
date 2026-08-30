@@ -1,0 +1,16 @@
+{
+  "name": "tartarus-patient-zero",
+  "version": "1.0.0",
+  "private": true,
+  "description": "INTENTIONALLY VULNERABLE demo service — a target for the Tartarus SecOps agent. Do not deploy.",
+  "license": "MIT",
+  "main": "src/app.js",
+  "scripts": {
+    "init-db": "node --no-warnings src/init_db.js",
+    "postinstall": "node --no-warnings src/init_db.js",
+    "start": "node --no-warnings src/app.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

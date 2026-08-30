@@ -1,0 +1,6 @@
+# Normalize all text to LF in the repo. Prevents CRLF (Windows checkout) from
+# breaking shebangs/scripts when code runs in the Linux Daytona sandbox.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary

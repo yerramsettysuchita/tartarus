@@ -1,0 +1,1 @@
+TARTARUS_FLAG{path_traversal_pwned_by_the_agent}

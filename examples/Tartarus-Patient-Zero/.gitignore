@@ -1,0 +1,5 @@
+node_modules/
+# Seeded at install/boot time; not committed.
+patient-zero.db
+patient-zero.db-shm
+patient-zero.db-wal

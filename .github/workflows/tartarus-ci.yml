@@ -1,0 +1,123 @@
+name: Tartarus CI
+
+# A real engineering pipeline: type-safety, tests + coverage, and a build gate on
+# every pull request to main (and on pushes to feature branches).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ['**']
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Type-check · Test · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check (strict)
+        run: npm run typecheck
+
+      - name: Unit tests + coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+  ui-build:
+    name: Command Center UI build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm ci
+
+      - name: Build the dashboard
+        working-directory: ui
+        run: npm run build
+
+  # We build a security tool, so our own supply chain has to be clean. Trivy
+  # scans dependencies and config for known vulnerabilities and misconfigurations.
+  trivy:
+    name: Trivy vulnerability scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true   # never fail the pipeline on a scan hiccup
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-dirs: 'examples,ui/dist,dist'
+          exit-code: '0'   # report only, never fail the pipeline on findings
+
+      - name: Upload results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true   # do not red the job if code scanning upload is unavailable
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+  # Static analysis with GitHub Advanced Security (CodeQL) over our TypeScript.
+  codeql:
+    name: CodeQL static analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
