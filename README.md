@@ -4,100 +4,112 @@
 
 ### Autonomous Red-Team and SecOps Agent
 
-**It finds the bug, proves it with a real exploit, waits for your approval, then fixes it.**
+**An AI agent that finds a vulnerability, proves it with a real exploit in an isolated sandbox, waits for human approval, then opens the fix as a pull request.**
 
-Tartarus scans a GitHub repository for vulnerabilities, writes an exploit and detonates it inside an isolated sandbox to prove the bug is real, pauses for a human to approve, then opens a remediation pull request. When the reviewer asks for changes, it revises its own patch and pushes again.
-
-Built on **[TrueForge](https://github.com/truefoundry/trueforge)** · reasoning by **Claude** · tools over **MCP** · sandboxed by **Daytona** · reviewed by **Qodo**
-
-![TrueForge](https://img.shields.io/badge/harness-TrueForge-4f46e5?style=for-the-badge)
-![Claude](https://img.shields.io/badge/LLM-Claude-8a63d2?style=for-the-badge)
-![Daytona](https://img.shields.io/badge/sandbox-Daytona-111827?style=for-the-badge)
-![Qodo](https://img.shields.io/badge/review-Qodo-ff5c00?style=for-the-badge)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-18-149eca?style=for-the-badge&logo=react&logoColor=white)
+![Node](https://img.shields.io/badge/Node-22-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646cff?style=for-the-badge&logo=vite&logoColor=white)
 
 ![Tests](https://img.shields.io/badge/tests-74_passing-16a34a?style=flat-square)
 ![CI](https://img.shields.io/badge/CI-CodeQL_+_Trivy-2088FF?style=flat-square)
 ![MCP](https://img.shields.io/badge/tools-MCP-0969da?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-334155?style=flat-square)
 
-### [🚀 Live demo](https://YOUR-APP.fly.dev) · [🎬 Demo video](https://youtu.be/YOUR_VIDEO)
-
-_Built for The Agent Harness Hackathon (TrueFoundry and Qodo)._
-
 </div>
 
-<p align="center"><img src="docs/images/landing.png" alt="Tartarus landing page" width="880"></p>
+## About this project
 
----
+Tartarus is a full-stack TypeScript project exploring a hard question: can an autonomous agent be trusted to touch a real codebase? Most AI security tools either flood you with unproven findings or act without a human in the loop. Tartarus is built around two invariants that address both. It does not report a vulnerability until an exploit actually triggers it in a sandbox, so every finding is backed by evidence. And it cannot open a pull request until a human approves, because the approval is enforced by the agent runtime, not merely requested in a prompt.
 
-## The problem
+The result is a working codebase with an agent backend, four custom tools exposed over the Model Context Protocol, an isolated sandbox execution layer, a self-healing review loop, and a polished real-time dashboard.
 
-Two things are broken in AI security tooling today. Scanners produce long lists of possible vulnerabilities that a human then has to triage, so the signal-to-noise ratio is poor. And autonomous agents will write to your repository without asking, which is unacceptable for security work.
-
-Tartarus is built around two invariants that answer both. It does not report a vulnerability until an exploit actually triggers it in a sandbox, so every finding is backed by evidence. And it cannot open a pull request until a human approves, because the approval is enforced by the harness runtime rather than requested in a prompt.
-
-## The three capabilities that make it a product
-
-**🛰 Sentinel Mode: zero-click continuous hunting.** Connect Tartarus to a GitHub webhook. The moment a developer pushes vulnerable code, the agent wakes up on its own, scans, detonates, and streams to the dashboard for approval. A real DevSecOps pipeline: push, prove, approve, patch, hands-free. See [src/server/sentinel.ts](src/server/sentinel.ts).
-
-**🔁 Self-Healing Loop: agentic collaboration with Qodo.** If Qodo reviews the fix and requests changes, Tartarus reads the comments, regenerates a better patch, and pushes a new commit to the same pull request. Two agents converging on a correct fix, no human in the middle. See [src/agent/selfHeal.ts](src/agent/selfHeal.ts).
-
-**🖥 The Command Center: an enterprise dashboard.** A spatial, glassmorphism console that shows exactly what the agent is doing, why it paused, and the blast radius of the change. It streams live sandbox telemetry during detonation and renders the approval as a GitHub-style side-by-side diff with token-level highlighting. See [ui/](ui/).
-
-<p align="center">
-  <img src="docs/images/dashboard-idle.png" alt="Command Center dashboard" width="440">
-  <img src="docs/images/detonation.png" alt="Sandbox detonation" width="440">
-</p>
-
-## How a hunt flows
+## How a run flows
 
 ```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant TF as TrueForge (Claude)
-    participant Box as Daytona sandbox
-    participant You as Human
-    participant Qodo as Qodo
-    Dev->>TF: push vulnerable code (or CLI)
-    TF->>TF: scan repository, flag sinks
-    TF->>Box: write exploit, detonate
-    Box-->>TF: TARTARUS_EXPLOIT_OK (proof)
-    TF-->>You: pause at the gold gate (approval required)
-    You-->>TF: approve
-    TF->>Qodo: open remediation PR, request /agentic_review
-    Qodo-->>TF: changes requested
-    TF->>Qodo: read feedback, push an improved patch
+flowchart LR
+    A["Scan the repository"] --> B["Write and detonate an exploit"]
+    B --> C{"Exploit proven?"}
+    C -->|no| A
+    C -->|yes| D["Pause at the human approval gate"]
+    D -->|approve| E["Open a fix pull request"]
+    D -->|deny| X["Stop, nothing is changed"]
+    E --> F["Automated code review"]
+    F -->|changes requested| G["Revise the patch, push again"]
+    G --> F
+    F -->|approved| H["Merge the fix"]
 ```
+
+## Highlights
+
+- **Runtime-enforced human approval.** The one tool that writes to your repository is gated by the agent harness, which suspends the run until a human approves. Safe autonomy by construction, not by prompt.
+- **Evidence-based findings.** Exploits detonate in an isolated, ephemeral sandbox and must print a success sentinel before a bug is reported. No triage backlog of maybe-vulnerabilities.
+- **Self-healing loop.** When the code reviewer requests changes, the agent reads the comments, regenerates the patch, and pushes a new commit to the same pull request.
+- **Real-time dashboard.** A spatial, glassmorphism React interface streams the agent's progress over Server-Sent Events, with a live isometric visualization of the sandbox, an animated stepper, and a GitHub-style approval diff with token-level highlighting.
+- **Production-minded engineering.** 74 unit tests with zero runtime dependencies, a CI pipeline running type-checks, tests, CodeQL, and Trivy, structured error handling, and a pre-flight health check.
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | TypeScript (strict), Node.js 22 |
+| Agent harness | TrueForge |
+| Reasoning model | Claude, provider-neutral through the harness |
+| Tooling protocol | Model Context Protocol, Streamable HTTP |
+| Sandbox execution | Daytona, isolated and ephemeral |
+| Code review | Qodo agentic PR review |
+| Source control API | GitHub via Octokit |
+| Frontend | React 18, Vite, Tailwind CSS, Framer Motion |
+| Realtime transport | Server-Sent Events over Express |
+| Testing | Node native test runner |
+| CI | GitHub Actions, CodeQL, Trivy |
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    U([Human operator]) -->|push or CLI| RUN[Hunt engine]
-    RUN -->|create session, stream turns| TF[TrueForge harness]
-    TF <-->|agent loop| LLM[Claude reasoning model]
-    TF -->|tools over MCP, bearer auth| MCP[Tartarus tool server]
+    U["Human operator"] -->|trigger a run| RUN["Hunt engine"]
+    RUN -->|session and turns| TF["Agent harness"]
+    TF <-->|agent loop| LLM["Reasoning model"]
+    TF -->|tools over MCP| MCP["Custom tool server"]
 
     subgraph TOOLS [The four MCP tools]
-      T1[scan_repo_for_vulns]
-      T2[run_exploit_in_sandbox]
-      T3[request_human_approval]
-      T4[create_patch_pr]
+      T1["scan_repo_for_vulns"]
+      T2["run_exploit_in_sandbox"]
+      T3["request_human_approval"]
+      T4["create_patch_pr"]
     end
     MCP --> T1 & T2 & T3 & T4
 
-    T1 -->|read source| GH[(GitHub)]
-    T2 -->|detonate in isolation| DAY[["Daytona sandbox, node:22, ephemeral"]]
+    T1 -->|read source| GH[("GitHub")]
+    T2 -->|detonate in isolation| DAY["Isolated sandbox, node 22"]
     T4 -->|branch, commit, PR| GH
 
-    TF -. approval required, gold gate .-> U
+    TF -. approval required .-> U
     U -. allow or deny .-> TF
-    GH -->|/agentic_review| QODO[Qodo]
+    GH -->|automated review| QODO["Code review"]
 ```
 
-## Why the gold gate is the important part
+The reasoning model decides what looks vulnerable and how to fix it. The harness enforces the guarantees: it streams the agent loop, dispatches the four tools, and physically pauses before the one tool that changes the outside world.
 
-The single most important line in our agent configuration is this one, in [src/agent/spec.ts](src/agent/spec.ts):
+## The sandbox lifecycle
+
+The dashboard renders the sandbox as a live isometric visualization that follows this exact state machine.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Scanning: run triggered
+    Scanning --> Detonating: exploit written
+    Detonating --> Approval: exploit proven
+    Approval --> Patched: human approves
+    Approval --> Idle: human denies
+    Patched --> [*]
+```
+
+## The engineering detail I am most proud of
+
+The single most important line in the agent configuration:
 
 ```jsonc
 "mcp_servers": [{
@@ -106,74 +118,62 @@ The single most important line in our agent configuration is this one, in [src/a
 }]
 ```
 
-`require_approval_for_tools` tells the TrueForge runtime to pause before it runs a named tool. When the model decides to call `create_patch_pr`, the harness does not execute it. It emits a `tool.approval_required` event and suspends the turn until a human resolves it. The model is structurally incapable of writing to your repository on its own. The prompt makes the agent well informed, and the harness makes the decision unavoidable.
+This tells the runtime to pause before executing a named tool. When the model decides to open a pull request, the harness does not run it. It emits an approval-required event and suspends the turn until a human resolves it. The model is structurally incapable of writing to the repository on its own. The prompt makes the agent well informed; the runtime makes the decision unavoidable. That separation is the whole design.
 
-<p align="center"><img src="docs/images/approval-diff.png" alt="The gold-gate approval modal with a side-by-side diff" width="820"></p>
+## What makes it more than a scanner
 
-## Not another scanner
-
-| Capability | Traditional scanners | Tartarus |
+| Capability | A typical scanner | Tartarus |
 |------------|:---:|:---:|
-| Proves the bug in a sandbox | ❌ | ✅ |
+| Proves the bug with a live exploit | ❌ | ✅ |
 | Human approval enforced by the runtime | ❌ | ✅ |
 | Writes the fix as a pull request | ❌ | ✅ |
-| Self-heals from reviewer feedback | ❌ | ✅ |
+| Revises its patch from review feedback | ❌ | ✅ |
 | Detonation isolated from your host | ❌ | ✅ |
-| Zero-click on push via webhook | ❌ | ✅ |
-| Open, inspectable agent loop | ❌ | ✅ |
 | Evidence, not a triage backlog | ❌ | ✅ |
 
-## Proof: Qodo agentic review
-
-Every pull request Tartarus opens ends with a `/agentic_review` trigger, so Qodo validates the fix. Our own development followed the same loop: we opened a PR, ran `/agentic_review`, and acted on Qodo's feedback before merging.
-
-<p align="center"><img src="docs/images/qodo-review.png" alt="Qodo agentic review on the pull request" width="820"></p>
-
-## One-command God Mode
+## Running it locally
 
 ```bash
-npm install && cp .env.example .env      # fill in keys, see docs/ENV_GUIDE.md
-npm run ui:build                          # build the dashboard once
-npm run register                          # register the MCP tools with TrueForge (once)
+npm install
+cp .env.example .env      # add your model, GitHub, and sandbox keys (see docs/ENV_GUIDE.md)
+npm run build
+npm test                  # 74 tests, Node native runner, zero dependencies
 
-npm run start:godmode                     # MCP tools + Sentinel (dashboard on :8799) + tunnel
-npm run webhook:register                  # auto-registers the GitHub push webhook
+npx @truefoundry/trueforge@latest         # start the agent harness, add the model and sandbox in its UI
+npm run mcp                                # start the custom tool server
+npm run register                           # register the tools with the harness
+npm run doctor                             # pre-flight: verify every service is reachable
+npm run hunt:ui -- your-org/some-repo      # run against a target, with the dashboard
 ```
 
-Open the dashboard, push vulnerable code to your target repo, and watch the agent scan, detonate, pause at the gold gate, and open a fix. Full setup, including the `localhost` versus `host.docker.internal` case, is in [SETUP.md](SETUP.md). The key guide is in [docs/ENV_GUIDE.md](docs/ENV_GUIDE.md), the demo script in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md), and the engineering deep dive in [docs/BLOG_POST.md](docs/BLOG_POST.md).
+Full setup with local networking notes is in [SETUP.md](SETUP.md), the environment reference is in [docs/ENV_GUIDE.md](docs/ENV_GUIDE.md), and a longer engineering write-up is in [docs/BLOG_POST.md](docs/BLOG_POST.md).
 
-## Running it manually
+The [ui/](ui/) folder is a standalone Vite app. Run it on its own with `npm --prefix ui run dev` to explore the interface.
 
-```bash
-npx @truefoundry/trueforge@latest         # harness on :8790, add the model and Daytona in its UI
-npm run mcp                                # Tartarus tool server on :8123
-npm run register                           # register the tools with TrueForge
-npm run doctor                             # pre-flight: verify all four services are ready
-npm run hunt:ui -- your-org/Tartarus-Patient-Zero   # hunt with the dashboard
-npm test                                   # 74 tests, Node's native runner, zero dependencies
-```
-
-## Project layout
+## Project structure
 
 | Path | Role |
 |------|------|
-| [src/mcp/server.ts](src/mcp/server.ts) | MCP server (Streamable HTTP, bearer auth) hosting the four tools. |
+| [src/mcp/server.ts](src/mcp/server.ts) | MCP server, Streamable HTTP with bearer auth, hosting the four tools. |
 | [src/mcp/tools/](src/mcp/tools/) | The four tools: scan, detonate, approve, patch. |
-| [src/services/sandbox.ts](src/services/sandbox.ts) | Isolated exploit detonation on Daytona, always torn down. |
-| [src/agent/hunt.ts](src/agent/hunt.ts) | The reusable hunt engine that both the CLI and Sentinel drive. |
-| [src/agent/selfHeal.ts](src/agent/selfHeal.ts) | The self-healing loop that responds to Qodo reviews. |
-| [src/server/hub.ts](src/server/hub.ts) | Command Center backend: SSE stream, approvals, and the webhook. |
-| [ui/](ui/) | The dashboard and landing page (React, Tailwind, Framer Motion). |
-| [examples/Tartarus-Patient-Zero/](examples/Tartarus-Patient-Zero/) | The intentionally vulnerable target. |
+| [src/services/sandbox.ts](src/services/sandbox.ts) | Isolated exploit detonation, always torn down. |
+| [src/agent/hunt.ts](src/agent/hunt.ts) | The reusable run engine that drives the agent loop. |
+| [src/agent/selfHeal.ts](src/agent/selfHeal.ts) | The self-healing loop that responds to review feedback. |
+| [src/server/hub.ts](src/server/hub.ts) | Realtime backend: SSE stream, approvals, and a webhook. |
+| [ui/](ui/) | The dashboard and landing page, React with Tailwind and Framer Motion. |
+| [test/](test/) | The unit test suite. |
+| [examples/Tartarus-Patient-Zero/](examples/Tartarus-Patient-Zero/) | An intentionally vulnerable app used as a safe test target. |
 
-## Security posture
+## Honest scope
 
-Exploit code never touches the host. It runs in an ephemeral, network-isolated Daytona sandbox that is destroyed in a `finally` block. Credentials stay in the harness, so the sandbox only ever sees the target and exploit code. The one tool that changes the outside world is gated by a human decision the runtime enforces. The tool server is authenticated with a shared bearer token, and every tool returns structured, retryable errors rather than crashing. Our own CI runs CodeQL static analysis and a Trivy vulnerability scan on every pull request.
+This is a personal engineering project. The codebase, tests, CI, and interface are complete and run locally. The four attack classes in the test target, SQL injection, command injection, path traversal, and SSRF, are real and reproducible. Running the full autonomous loop requires your own model, GitHub, and sandbox credentials, which are read from a git-ignored `.env` and never committed.
+
+## What I learned
+
+Building this clarified where trust in an autonomous system actually comes from. The intelligence of the model matters, but the properties you most need to rely on, such as isolation and human approval, are properties of the runtime the model runs inside, not of the model itself. Designing for that separation, and building an interface that makes the agent's state and the moment it pauses legible to a human, was the core of the work.
 
 <div align="center">
 
-Claude for the intelligence, TrueForge for the trust. Both matter, and the second one is the part the industry keeps underinvesting in.
-
-**MIT licensed** · Built for The Agent Harness Hackathon
+**MIT licensed** · Built with TypeScript, React, and the Model Context Protocol
 
 </div>
