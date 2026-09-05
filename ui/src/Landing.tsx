@@ -204,22 +204,20 @@ export function Landing() {
 
         {/* stats band */}
         <section className="pb-16">
-          <div className="glass overflow-hidden rounded-3xl">
-            <div className="grid items-center gap-8 p-10 lg:grid-cols-[1.2fr_1fr]">
-              <div>
-                <Kicker>Outcomes</Kicker>
-                <h2 className="font-display mt-2 text-2xl font-bold tracking-tight text-ink">Evidence over noise, control over autonomy</h2>
-                <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-sub">Findings that are proven, not guessed. Fixes that ship as reviewed pull requests. And an agent that is structurally unable to touch your code without a person in the loop.</p>
-                <a href="#app" className="mt-6 inline-block rounded-xl px-5 py-3 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#6b6bff,#4f46e5)' }}>Open the dashboard</a>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[['74', 'unit tests'], ['4', 'attack classes proven'], ['2', 'AI reviewers in the loop'], ['0', 'unattended writes']].map(([n, l]) => (
-                  <div key={l} className="rounded-2xl border border-white/70 bg-white/50 p-5 text-center">
-                    <div className="font-display text-3xl font-extrabold" style={{ background: 'linear-gradient(135deg,#4f46e5,#0891b2)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{n}</div>
-                    <div className="mt-1 text-xs text-sub">{l}</div>
-                  </div>
-                ))}
-              </div>
+          <Kicker>Outcomes</Kicker>
+          <H2>Evidence over noise, control over autonomy</H2>
+          <Sub>Findings that are proven, not guessed. Fixes that ship as reviewed pull requests. And an agent that is structurally unable to touch your code without a person in the loop.</Sub>
+          <div className="glass mt-9 rounded-3xl p-8">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {[['74', 'unit tests'], ['4', 'attack classes proven'], ['2', 'AI reviewers in the loop'], ['0', 'unattended writes']].map(([n, l]) => (
+                <div key={l} className="rounded-2xl border border-white/70 bg-white/50 p-5 text-center">
+                  <div className="font-display text-3xl font-extrabold" style={{ background: 'linear-gradient(135deg,#4f46e5,#0891b2)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{n}</div>
+                  <div className="mt-1 text-xs text-sub">{l}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <a href="#app" className="inline-block rounded-xl px-6 py-3 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#6b6bff,#4f46e5)', boxShadow: '0 10px 24px -8px rgba(79,70,229,.6)' }}>Open the dashboard</a>
             </div>
           </div>
         </section>
